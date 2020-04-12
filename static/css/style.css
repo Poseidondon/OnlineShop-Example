@@ -1,0 +1,78 @@
+.top-container {
+    padding: 10px;
+    background: #00db9a;
+    color: white;
+}
+
+.header {
+    background: white;
+    color: #555;
+}
+
+body {
+    margin: 0;
+    background: #ebfff9;
+}
+
+.container{
+    background: #ebfff9;
+    min-width: 100%;
+}
+
+.sticky {
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+
+.sticky + .content {
+    padding-top: 60px;
+}
+
+.nav_elem{
+    width: 25%;
+    text-align: center;
+}
+
+.nav_elem_chosen{
+    width: 25%;
+    text-align: center;
+    color: white;
+    background: #00db9a;
+}
+
+.nav_elem:hover{
+    cursor: pointer;
+    color: #00db9a;
+}
+
+.btn-base{
+    right: 30px;
+}
+
+.btn-base:hover{
+    color: #00db9a;
+}
+
+.btn-auth{
+    width: 300px;
+    color: #00db9a;
+    border-color: #00db9a;
+}
+
+.btn-auth:hover{
+    background: #00db9a;
+    color: white;
+}
+
+.authorization{
+    background: white;
+    border: 3px solid #00db9a;
+    color: #555;
+    border-radius: 12px;
+    margin: 50px 30%;
+}
+
+.authorization_field{
+    margin: 5px 0;
+}

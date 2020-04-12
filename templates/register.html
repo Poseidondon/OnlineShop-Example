@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="authorization" align="center">
+    <h2 align="left" style="margin-left: 20px;">Регистрация</h2>
+    <hr style="margin: 10px">
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        <table width="94%" cellpadding="6">
+        <tr>
+            <td width="30%">{{ form.email.label }}</td>
+            <td>{{ form.email(class="form-control", autocomplete="off", type="email") }}</td>
+            {% for error in form.email.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>{{ form.password.label }}</td>
+            <td>{{ form.password(class="form-control", autocomplete="off", type="password") }}</td>
+            {% for error in form.password.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>{{ form.password_again.label }}</td>
+            <td>{{ form.password_again(class="form-control", autocomplete="off", type="password") }}</td>
+            {% for error in form.password_again.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>{{ form.surname.label }}</td>
+            <td>{{ form.surname(class="form-control", autocomplete="off") }}</td>
+            {% for error in form.surname.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>{{ form.name.label }}</td>
+            <td>{{ form.name(class="form-control", autocomplete="off") }}</td>
+            {% for error in form.name.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>{{ form.address.label }}</td>
+            <td>{{ form.address(class="form-control", autocomplete="off") }}</td>
+            {% for error in form.address.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        </table>
+        <div style="margin: 10px 0;">{{ form.submit(type="submit", class="btn btn-outline-light btn-auth") }}</div>
+        <div style="margin: 10px 0;">{{ message }}</div>
+    </form>
+</div>
+{% endblock %}

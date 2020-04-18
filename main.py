@@ -13,6 +13,13 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
+def change_url_args(url, new_arg):
+    if '?' in url:
+        args = list(filter(lambda x: new_arg.split('=')[0] not in x, url.split('?')[1].split('&')))
+        return '?' + '&'.join(sorted(args + [new_arg]))
+    return '?' + new_arg
+
+
 @login_manager.user_loader
 def load_user(user_id):
     session = db_session.create_session()
@@ -81,7 +88,13 @@ def profile():
 @app.route('/shop')
 def shop():
     session = db_session.create_session()
-    return render_template('base.html', title='BNS | Магазин')
+    products = session.query(Product).all()
+    if request.args.get('order'):
+        order = request.args.get('order')
+    else:
+        order = 0
+    return render_template('shop.html', title='BNS | Магазин', products=products, order=order,
+                           change_url_args=change_url_args)
 
 
 @app.route('/configurator')

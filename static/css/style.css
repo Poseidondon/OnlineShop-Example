@@ -10,7 +10,6 @@
 }
 
 body {
-    margin: 0;
     background: #ebfff9;
 }
 
@@ -30,6 +29,7 @@ body {
 }
 
 .nav_elem{
+    margin-bottom: 0;
     width: 25%;
     text-align: center;
 }

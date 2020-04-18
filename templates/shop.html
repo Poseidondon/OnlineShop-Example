@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 80%; margin: 0 auto;">
+    <div class="row" style="border-bottom: 3px solid #555; color: #555;">
+        <h1>Каталог товаров</h1>
+        <div align="right" class="dropdown" style="margin: 10px; position: absolute; right: 12%">
+            <button class="btn btn-outline-light btn-auth dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Сортировать:
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <a class="dropdown-item" href={{change_url_args(request.url, 'order=0')}}>по возрастанию цены</a>
+                <a class="dropdown-item" href={{change_url_args(request.url, 'order=1')}}>по убыванию цены</a>
+                <a class="dropdown-item" href={{change_url_args(request.url, 'order=2')}}>по наименованию</a>
+                <a class="dropdown-item" href={{change_url_args(request.url, 'order=3')}}>по рейтингу</a>
+            </div>
+        </div>
+    </div>
+    {% if products %}
+    {% else %}
+    <div style="background: red;" class="row">
+        <div style="background: green;" class="col-3">col</div>
+        <div style="background: blue;" class="col">col</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

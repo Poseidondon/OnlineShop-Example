@@ -4,8 +4,15 @@
 <div style="max-width: 80%; margin: 0 auto;">
     <div class="row" style="border-bottom: 3px solid #555; color: #555;">
         <h1>Каталог товаров</h1>
-        <div align="right" class="dropdown" style="margin: 10px; position: absolute; right: 12%">
-            <button class="btn btn-outline-light btn-auth dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        {% if current_user.is_authenticated %}
+            {% if current_user.access_level > 0 %}
+            <a class="btn btn-outline-light btn-auth" style="margin: 10px; position: absolute; right: 25%; width: 14%;"
+               href="/shop/add_product">Добавить продукт</a>
+            {% endif %}
+        {% endif %}
+        <div align="right" class="dropdown" style="margin: 10px; position: absolute; right: 10%; width: 14%;">
+            <button class="btn btn-outline-light btn-auth dropdown-toggle" style="width: 100%;" type="button"
+                    id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Сортировать:
             </button>
             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">

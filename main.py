@@ -35,7 +35,7 @@ def index():
 @login_required
 def logout():
     logout_user()
-    return redirect("/")
+    return redirect(request.url_root)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -80,6 +80,7 @@ def register():
 
 
 @app.route('/profile')
+@login_required
 def profile():
     session = db_session.create_session()
     return render_template('base.html', title='BNS | Личный кабинет')
@@ -95,6 +96,31 @@ def shop():
         order = 0
     return render_template('shop.html', title='BNS | Магазин', products=products, order=order,
                            change_url_args=change_url_args)
+
+
+@app.route('/shop/add_product', methods=['GET', 'POST'])
+@login_required
+def add_product():
+    if current_user.access_level < 1:
+        abort(403)
+
+    form = AddProductForum()
+    if form.validate_on_submit():
+        session = db_session.create_session()
+        if session.query(Product).filter(Product.name == form.name.data).first():
+            return render_template('add_product.html', title='BNS | Добавить продукт',
+                                   form=form,
+                                   message="Товар с таким названием уже есть")
+        print(request.form.getlist('tag'))
+        product = Product(name=form.name.data,
+                          description=form.description.data,
+                          image=form.image.data.read(),
+                          price=form.price.data,
+                          amount=form.amount.data)
+        session.add(product)
+        session.commit()
+        return redirect('/shop')
+    return render_template('add_product.html', title='BNS | Добавить продукт', form=form)
 
 
 @app.route('/configurator')
@@ -119,7 +145,7 @@ def main():
     db_session.global_init("db/shop.sqlite")
 
     session = db_session.create_session()
-    for user in session.query(User):
+    for user in session.query(Product):
         pprint(user.__dict__)
 
     app.run()

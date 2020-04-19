@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="authorization" align="center">
+    <h2 align="left" style="margin-left: 20px;">Добавить продукт</h2>
+    <hr style="margin: 10px">
+    <form action="" method="post" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        {{ form.csrf_token }}
+        <table width="94%" cellpadding="6">
+        <tr>
+            <td width="30%">{{ form.name.label }}</td>
+            <td>{{ form.name(class="form-control") }}</td>
+            {% for error in form.name.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>{{ form.description.label }}</td>
+            <td>{{ form.description(class="form-control") }}</td>
+            {% for error in form.description.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>{{ form.image.label }}</td>
+            <td>{{ form.image() }}</td>
+            {% for error in form.image.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>{{ form.price.label }}</td>
+            <td>{{ form.price(class="form-control") }}</td>
+            {% for error in form.price.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>{{ form.amount.label }}</td>
+            <td>{{ form.amount(class="form-control") }}</td>
+            {% for error in form.amount.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        </table>
+        <div align="left" class="dropdown keep-inside-clicks-open" style="width: 20%; margin: 0 10px;">
+            <button class="btn btn-outline-light btn-auth dropdown-toggle" style="width: 100%;" type="button"
+                    id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Теги
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <label class="dropdown-item"><input type="checkbox" name="tags" value="value">Text</label>
+                <label class="dropdown-item"><input type="checkbox" name="tags" value="value">Text</label>
+                <label class="dropdown-item"><input type="checkbox" name="tags" value="value">Text</label>
+            </div>
+        </div>
+        <div style="margin: 10px 0;">{{ form.submit(type="submit", class="btn btn-outline-light btn-auth", style="width: 300px;") }}</div>
+        <div style="margin: 10px 0;">{{ message }}</div>
+    </form>
+</div>
+
+<script>
+</script>
+{% endblock %}

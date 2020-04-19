@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+from wtforms import StringField, IntegerField, PasswordField, SubmitField, BooleanField, TextAreaField
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 
@@ -21,3 +22,13 @@ class LoginForm(FlaskForm):
     password = PasswordField('Пароль', validators=[DataRequired()])
     remember_me = BooleanField('Запомнить меня')
     submit = SubmitField('Войти')
+
+
+class AddProductForum(FlaskForm):
+    name = StringField('Название', validators=[DataRequired()])
+    description = TextAreaField('*Описание')
+    image = FileField('Изображение', validators=[FileRequired(), FileAllowed(['jpg', 'png', 'gif'],
+                                                                             'Выберите изображение')])
+    price = IntegerField('Цена (₽)', validators=[DataRequired()])
+    amount = IntegerField('*Кол-во на складе', default=0)
+    submit = SubmitField('Добавить')

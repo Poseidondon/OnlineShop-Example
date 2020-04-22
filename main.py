@@ -13,11 +13,17 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
-def change_url_args(url, new_arg):
-    if '?' in url:
-        args = list(filter(lambda x: new_arg.split('=')[0] not in x, url.split('?')[1].split('&')))
-        return '?' + '&'.join(sorted(args + [new_arg]))
-    return '?' + new_arg
+def change_url_args(url, arg, value, mode='change'):
+    if mode == 'change':
+        if '?' in url:
+            args = list(filter(lambda x: arg not in x, url.split('?')[1].split('&')))
+            return '?' + '&'.join(sorted(args + [arg + '=' + value]))
+        return '?' + arg + '=' + value
+    elif mode == 'change_list':
+        if '?' in url:
+            args = list(filter(lambda x: arg not in x, request.url.split('?')[1].split('&')))
+            return '?' + '&'.join(sorted(args + [arg + '=' + i for i in value]))
+        return '?' + '&'.join(sorted([arg + '=' + i for i in value]))
 
 
 @login_manager.user_loader
@@ -86,16 +92,24 @@ def profile():
     return render_template('base.html', title='BNS | Личный кабинет')
 
 
-@app.route('/shop')
+@app.route('/shop', methods=['GET', 'POST'])
 def shop():
     session = db_session.create_session()
     products = session.query(Product).all()
+    tags = session.query(Tag).all()
+    filter_args = request.args.getlist('tags-filter')
+
+    if request.method == 'POST':
+        tag_filter = request.form.getlist('tags-filter')
+        return redirect(change_url_args(request.url, 'tags-filter', tag_filter, mode='change_list'))
+
     if request.args.get('order'):
         order = request.args.get('order')
     else:
         order = 0
+
     return render_template('shop.html', title='BNS | Магазин', products=products, order=order,
-                           change_url_args=change_url_args)
+                           change_url_args=change_url_args, tags=tags, filter=filter_args)
 
 
 @app.route('/shop/add_product', methods=['GET', 'POST'])
@@ -104,23 +118,29 @@ def add_product():
     if current_user.access_level < 1:
         abort(403)
 
+    session = db_session.create_session()
     form = AddProductForum()
     if form.validate_on_submit():
-        session = db_session.create_session()
         if session.query(Product).filter(Product.name == form.name.data).first():
             return render_template('add_product.html', title='BNS | Добавить продукт',
-                                   form=form,
+                                   form=form, tags=session.query(Tag),
                                    message="Товар с таким названием уже есть")
-        print(request.form.getlist('tag'))
         product = Product(name=form.name.data,
                           description=form.description.data,
                           image=form.image.data.read(),
                           price=form.price.data,
                           amount=form.amount.data)
+        for tag in request.form.getlist('tags'):
+            if session.query(Tag).filter(Tag.name == tag).first():
+                new_tag = session.query(Tag).filter(Tag.name == tag).first()
+            else:
+                new_tag = Tag(name=tag)
+                session.add(new_tag)
+            product.tags.append(new_tag)
         session.add(product)
         session.commit()
         return redirect('/shop')
-    return render_template('add_product.html', title='BNS | Добавить продукт', form=form)
+    return render_template('add_product.html', title='BNS | Добавить продукт', form=form, tags=session.query(Tag))
 
 
 @app.route('/configurator')
@@ -146,7 +166,7 @@ def main():
 
     session = db_session.create_session()
     for user in session.query(Product):
-        pprint(user.__dict__)
+        pprint(user.tags)
 
     app.run()
 

@@ -76,6 +76,26 @@ body {
     margin: 5px 0;
 }
 
-#tags {
-    display: none;
+.tags:hover {
+    color: #00db9a;
+}
+
+.tags-filter{
+    color: #555;
+    background: #ebfff9;
+}
+
+.tags-filter:hover{
+    cursor: pointer;
+    color: #00db9a;
+}
+
+.tags-filter-selected{
+    color: white;
+    background: #00db9a;
+}
+
+.tags-filter-selected:hover{
+    cursor: pointer;
+    color: #555;
 }

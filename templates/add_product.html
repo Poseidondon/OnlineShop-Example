@@ -1,6 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
+<script>
+function addTag(){
+    var last_tag = document.getElementById('last_tag');
+    var tag_name = document.getElementById('new_tag').value.toLowerCase();
+    var prev_names = "";
+    for (let i of document.getElementsByName("tags")){
+        prev_names += i.value.toLowerCase();;
+    }
+    if ((3 <= tag_name.length && tag_name.length <= 12) && !(prev_names.includes(tag_name))) {
+        var upper_case = tag_name.charAt(0).toUpperCase() + tag_name.slice(1);
+        if (prev_names == "") {
+            document.getElementById('tags-menu').insertAdjacentHTML('afterbegin', "<label class='dropdown-item tags' id='last_tag'><input checked type='checkbox' name='tags' value='" + tag_name + "'> " + upper_case + "</label>");
+        } else {
+            var new_tag = last_tag.insertAdjacentHTML('afterend', "<label class='dropdown-item tags' id='last_tag'><input checked type='checkbox' name='tags' value='" + tag_name + "'> " + upper_case + "</label>");
+            last_tag.removeAttribute("id");
+        }
+    }
+}
+</script>
+
 <div class="authorization" align="center">
     <h2 align="left" style="margin-left: 20px;">Добавить продукт</h2>
     <hr style="margin: 10px">
@@ -59,10 +79,24 @@
                     id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Теги
             </button>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <label class="dropdown-item"><input type="checkbox" name="tags" value="value">Text</label>
-                <label class="dropdown-item"><input type="checkbox" name="tags" value="value">Text</label>
-                <label class="dropdown-item"><input type="checkbox" name="tags" value="value">Text</label>
+            <div id="tags-menu" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                {% for tag in tags %}
+                    <label class="dropdown-item tags"><input type="checkbox" name="tags" value="{{tag.name}}"> {{tag.name[0].upper() + tag.name[1:]}}</label>
+                {% if loop.last %}
+                    <label class="dropdown-item tags" id="last_tag"><input type="checkbox" name="tags" value="{{tag.name}}"> {{tag.name[0].upper() + tag.name[1:]}}</label>
+                {% endif %}
+                {% endfor %}
+                <table cellpadding="5">
+                    <tr>
+                        <td>
+                        <input id="new_tag" class="form-control">
+                        </td>
+
+                        <td>
+                        <button class="btn btn-outline-light btn-auth" type="button" onclick="addTag()">+</button>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
         <div style="margin: 10px 0;">{{ form.submit(type="submit", class="btn btn-outline-light btn-auth", style="width: 300px;") }}</div>

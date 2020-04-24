@@ -81,9 +81,27 @@ function addTag(){
             </button>
             <div id="tags-menu" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 {% for tag in tags %}
-                    <label class="dropdown-item tags"><input type="checkbox" name="tags" value="{{tag.name}}"> {{tag.name[0].upper() + tag.name[1:]}}</label>
                 {% if loop.last %}
-                    <label class="dropdown-item tags" id="last_tag"><input type="checkbox" name="tags" value="{{tag.name}}"> {{tag.name[0].upper() + tag.name[1:]}}</label>
+                    <label class="dropdown-item tags" id="last_tag">
+                        {% if tag.name in chosen_tags %}
+                        <input checked type="checkbox" name="tags" value="{{tag.name}}"> {{tag.name[0].upper() + tag.name[1:]}}
+                        {% else %}
+                        <input type="checkbox" name="tags" value="{{tag.name}}"> {{tag.name[0].upper() + tag.name[1:]}}
+                        {% endif %}
+                    </label>
+                    {% for chosen_tag in chosen_tags %}
+                        {% if chosen_tag not in tag_names(tags) %}
+                        <label class="dropdown-item tags"><input checked type="checkbox" name="tags" value="{{chosen_tag}}"> {{chosen_tag[0].upper() + chosen_tag[1:]}}</label>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <label class="dropdown-item tags">
+                        {% if tag.name in chosen_tags %}
+                        <input checked type="checkbox" name="tags" value="{{tag.name}}"> {{tag.name[0].upper() + tag.name[1:]}}
+                        {% else %}
+                        <input type="checkbox" name="tags" value="{{tag.name}}"> {{tag.name[0].upper() + tag.name[1:]}}
+                        {% endif %}
+                    </label>
                 {% endif %}
                 {% endfor %}
                 <table cellpadding="5">

@@ -24,11 +24,11 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Войти')
 
 
-class AddProductForum(FlaskForm):
+class AddProductForm(FlaskForm):
     name = StringField('Название', validators=[DataRequired()])
     description = TextAreaField('*Описание')
-    image = FileField('Изображение', validators=[FileRequired(), FileAllowed(['jpg', 'png', 'gif'],
-                                                                             'Выберите изображение')])
+    image = FileField('Изображение', validators=[FileAllowed(['jpg', 'png', 'gif'],
+                                                             'Выберите изображение')])
     price = IntegerField('Цена (₽)', validators=[DataRequired()])
     amount = IntegerField('*Кол-во на складе', default=0)
-    submit = SubmitField('Добавить')
+    submit = SubmitField('Сохранить')

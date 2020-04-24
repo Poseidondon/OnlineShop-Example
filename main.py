@@ -4,10 +4,12 @@ from data import db_session
 from data.__all_models import *
 from data.forms import *
 
+from PIL import Image
 from pprint import pprint
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -24,6 +26,15 @@ def change_url_args(url, arg, value, mode='change'):
             args = list(filter(lambda x: arg not in x, request.url.split('?')[1].split('&')))
             return '?' + '&'.join(sorted(args + [arg + '=' + i for i in value]))
         return '?' + '&'.join(sorted([arg + '=' + i for i in value]))
+
+
+@app.after_request
+def add_header(response):
+    # response.cache_control.no_store = True
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
 
 
 @login_manager.user_loader
@@ -95,21 +106,36 @@ def profile():
 @app.route('/shop', methods=['GET', 'POST'])
 def shop():
     session = db_session.create_session()
-    products = session.query(Product).all()
-    tags = session.query(Tag).all()
     filter_args = request.args.getlist('tags-filter')
+    tags = session.query(Tag).all()
+
+    if request.args.get('order'):
+        order = int(request.args.get('order'))
+    else:
+        order = 0
+
+    if order == 0:
+        products_query = session.query(Product).order_by(Product.price).all()
+    elif order == 1:
+        products_query = session.query(Product).order_by(Product.price.desc()).all()
+    elif order == 2:
+        products_query = session.query(Product).order_by(Product.name).all()
+    else:
+        products_query = session.query(Product).order_by(Product.name).all()
+    if filter_args:
+        products = []
+        for product in products_query:
+            if set([i.name for i in product.tags]) & set(filter_args):
+                products.append(product)
+    else:
+        products = products_query
 
     if request.method == 'POST':
         tag_filter = request.form.getlist('tags-filter')
         return redirect(change_url_args(request.url, 'tags-filter', tag_filter, mode='change_list'))
 
-    if request.args.get('order'):
-        order = request.args.get('order')
-    else:
-        order = 0
-
     return render_template('shop.html', title='BNS | Магазин', products=products, order=order,
-                           change_url_args=change_url_args, tags=tags, filter=filter_args)
+                           change_url_args=change_url_args, tags=tags, filter=filter_args, str=str)
 
 
 @app.route('/shop/add_product', methods=['GET', 'POST'])
@@ -118,19 +144,24 @@ def add_product():
     if current_user.access_level < 1:
         abort(403)
 
+    form = AddProductForm()
     session = db_session.create_session()
-    form = AddProductForum()
-    if form.validate_on_submit():
+    chosen_tags = request.form.getlist('tags')
+    if form.validate_on_submit() and form.image.validate(form, extra_validators=[FileRequired()]):
         if session.query(Product).filter(Product.name == form.name.data).first():
             return render_template('add_product.html', title='BNS | Добавить продукт',
-                                   form=form, tags=session.query(Tag),
-                                   message="Товар с таким названием уже есть")
+                                   form=form, tags=session.query(Tag), chosen_tags=chosen_tags,
+                                   tag_names=lambda x: [i.name for i in x], message="Товар с таким названием уже есть")
+        if not request.form.getlist('tags'):
+            return render_template('add_product.html', title='BNS | Добавить продукт',
+                                   form=form, tags=session.query(Tag), chosen_tags=chosen_tags,
+                                   tag_names=lambda x: [i.name for i in x], message="Выберите хотя бы 1 тег")
+
         product = Product(name=form.name.data,
                           description=form.description.data,
-                          image=form.image.data.read(),
                           price=form.price.data,
                           amount=form.amount.data)
-        for tag in request.form.getlist('tags'):
+        for tag in chosen_tags:
             if session.query(Tag).filter(Tag.name == tag).first():
                 new_tag = session.query(Tag).filter(Tag.name == tag).first()
             else:
@@ -139,8 +170,89 @@ def add_product():
             product.tags.append(new_tag)
         session.add(product)
         session.commit()
+
+        f_name = 'static/images/' + str(product.id) + '.png'
+        f = open(f_name, 'wb')
+        f.write(form.image.data.read())
+        f.close()
+        im = Image.open(f_name)
+        im.resize((150, 150)).save(f_name)
         return redirect('/shop')
-    return render_template('add_product.html', title='BNS | Добавить продукт', form=form, tags=session.query(Tag))
+    return render_template('add_product.html', title='BNS | Добавить продукт', form=form, tags=session.query(Tag),
+                           chosen_tags=chosen_tags, tag_names=lambda x: [i.name for i in x])
+
+
+@app.route('/shop/product/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_product(id):
+    if current_user.access_level < 1:
+        abort(403)
+
+    form = AddProductForm()
+    session = db_session.create_session()
+    product = session.query(Product).filter(Product.id == id).first()
+    if request.method == "GET":
+        if product:
+            form.name.data = product.name
+            form.description.data = product.description
+            form.price.data = product.price
+            form.amount.data = product.amount
+            form.image.label = 'Изменить изображение'
+        else:
+            abort(404)
+    if form.validate_on_submit():
+        chosen_tags = request.form.getlist('tags')
+        duplicate = session.query(Product).filter(Product.name == form.name.data).first()
+        if duplicate:
+            if duplicate.id != product.id:
+                return render_template('add_product.html', title='BNS | Редактировать продукт',
+                                       form=form, tags=session.query(Tag), chosen_tags=chosen_tags,
+                                       tag_names=lambda x: [i.name for i in x],
+                                       message="Товар с таким названием уже есть")
+        if not request.form.getlist('tags'):
+            return render_template('add_product.html', title='BNS | Редактировать продукт',
+                                   form=form, tags=session.query(Tag), chosen_tags=chosen_tags,
+                                   tag_names=lambda x: [i.name for i in x], message="Выберите хотя бы 1 тег")
+
+        if product:
+            product.name = form.name.data
+            product.description = form.description.data
+            product.price = form.price.data
+            product.amount = form.amount.data
+
+            if form.image.data:
+                f_name = 'static/images/' + str(product.id) + '.png'
+                f = open(f_name, 'wb')
+                f.write(form.image.data.read())
+                f.close()
+                im = Image.open(f_name)
+                im.resize((150, 150)).save(f_name)
+            session.commit()
+            return redirect('/shop')
+        else:
+            abort(404)
+    return render_template('add_product.html', title='BNS | Редактировать продукт', form=form, tags=session.query(Tag),
+                           chosen_tags=[i.name for i in product.tags],
+                           tag_names=lambda x: [i.name for i in x])
+
+
+@app.route('/shop/delete_product/<int:id>')
+@login_required
+def product_delete(id):
+    if current_user.access_level < 1:
+        abort(403)
+
+    session = db_session.create_session()
+    product = session.query(Product).filter(Product.id == id).first()
+    if product:
+        for tag in product.tags:
+            if len(tag.products) == 1:
+                session.delete(tag)
+        session.delete(product)
+        session.commit()
+    else:
+        abort(404)
+    return redirect('/shop')
 
 
 @app.route('/configurator')
@@ -165,8 +277,6 @@ def main():
     db_session.global_init("db/shop.sqlite")
 
     session = db_session.create_session()
-    for user in session.query(Product):
-        pprint(user.tags)
 
     app.run()
 

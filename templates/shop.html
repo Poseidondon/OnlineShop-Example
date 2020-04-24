@@ -38,12 +38,12 @@ function toggle_filter(obj){
                 <a class="dropdown-item" href={{change_url_args(request.url, 'order', '0')}}>по возрастанию цены</a>
                 <a class="dropdown-item" href={{change_url_args(request.url, 'order', '1')}}>по убыванию цены</a>
                 <a class="dropdown-item" href={{change_url_args(request.url, 'order', '2')}}>по наименованию</a>
-                <a class="dropdown-item" href={{change_url_args(request.url, 'order', '3')}}>по рейтингу</a>
+                <a class="dropdown-item" href={{change_url_args(request.url, 'order', '3')}}>по популярности</a>
             </div>
         </div>
     </div>
     <div class="row">
-        <div style="border-right: 1px solid #555; color: #555;" class="col-3">
+        <div style="border-right: 1px solid #555;" class="col-3">
             <form method="post">
             {% for tag in tags %}
             {% if tag.name in filter %}
@@ -59,9 +59,46 @@ function toggle_filter(obj){
             <button style="margin-top: 10px;" type="submit" class="btn btn-outline-light btn-auth">Применить фильтры</button>
             </form>
         </div>
-        <div style="border-left: 1px solid #555; color: #555;" class="col">
+        <div style="border-left: 1px solid #555;" class="col">
             {% if products %}
-            {{products[0].image}}
+                {% for product in products %}
+                <div style="margin-top: 15px;" class="row">
+                    <div style="max-width: 170px;" class="col">
+                    <img width="150" height="150" src={{request.url_root + 'static/images/' + str(product.id) + '.png'}}>
+                    </div>
+
+                    <div class="col">
+                        <div style="min-height: 30%;" class="row">
+                            <h4>{{product.name}}</h4>
+                        </div>
+                        <div style="min-height: 70%;" class="row">
+                            <div class="col">
+                                {% if product.description %}
+                                <p>{{product.description}}</p>
+                                {% else %}
+                                <p>Подробное описание пока что не создано :(</p>
+                                {% endif %}
+                                <p>Кол-во на складе: {{product.amount}}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="max-width: 20%;" class="col">
+                        <h4>{{product.price}} ₽</h4>
+                        <a style="position: absolute; top: 0; right: 30px;" href="/shop/delete_product/{{product.id}}" class="btn-sm btn-outline-danger">×</a>
+                        {% if product.amount <= 0 %}
+                        <button style="width: 90%;" type="submit" class="btn btn-outline-danger disabled">Купить</button>
+                        {% else %}
+                        <button style="width: 90%;" type="submit" class="btn btn-outline-light btn-auth">Купить</button>
+                        {% endif %}
+                        {% if current_user.is_authenticated %}
+                            {% if current_user.access_level > 0 %}
+                            <a style="margin-top: 10px; width: 90%;" href="/shop/product/{{product.id}}" class="btn btn-outline-light btn-auth">Изменить</a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
             {% else %}
             <h4>Товаров по указанным фильтрам не найдено</h4>
             {% endif %}

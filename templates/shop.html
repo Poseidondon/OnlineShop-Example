@@ -56,12 +56,18 @@ function toggle_filter(obj){
                 </div>
             {% endif %}
             {% endfor %}
-            <button style="margin-top: 10px;" type="submit" class="btn btn-outline-light btn-auth">Применить фильтры</button>
+            {% if availability_filter %}
+            <label style="margin-top: 10px;"><input checked type="checkbox" name="availability-filter" value="1"> Товары только в наличии</label>
+            {% else %}
+            <label style="margin-top: 10px;"><input type="checkbox" name="availability-filter" value="1"> Товары только в наличии</label>
+            {% endif %}
+            <button style="margin-top: 5px;" type="submit" class="btn btn-outline-light btn-auth">Применить фильтры</button>
             </form>
         </div>
         <div style="border-left: 1px solid #555;" class="col">
             {% if products %}
                 {% for product in products %}
+                {% if not availability_filter or product.amount > 0 %}
                 <div style="margin-top: 15px;" class="row">
                     <div style="max-width: 170px;" class="col">
                     <img width="150" height="150" src={{request.url_root + 'static/images/' + str(product.id) + '.png'}}>
@@ -85,11 +91,21 @@ function toggle_filter(obj){
 
                     <div style="max-width: 20%;" class="col">
                         <h4>{{product.price}} ₽</h4>
-                        <a style="position: absolute; top: 0; right: 30px;" href="/shop/delete_product/{{product.id}}" class="btn-sm btn-outline-danger">×</a>
+                        {% if current_user.is_authenticated %}
+                            {% if current_user.access_level > 0 %}
+                            <a style="position: absolute; top: 0; right: 30px;" href="/shop/delete_product/{{product.id}}" class="btn-sm btn-outline-danger">×</a>
+                            {% endif %}
+                        {% endif %}
                         {% if product.amount <= 0 %}
-                        <button style="width: 90%;" type="submit" class="btn btn-outline-danger disabled">Купить</button>
+                        <button style="width: 90%;" class="btn btn-outline-danger disabled">Купить</button>
                         {% else %}
-                        <button style="width: 90%;" type="submit" class="btn btn-outline-light btn-auth">Купить</button>
+                        <form action="/shop/add-to-cart/{{product.id}}/{{format_path(request.url)}}" method="post">
+                            {% if str(product.id) + ', ' in current_user.cart %}
+                            <button type="submit" style="width: 90%;" class="btn btn-outline-light btn-auth">В корзине</button>
+                            {% else %}
+                            <button type="submit" style="width: 90%;" class="btn btn-outline-light btn-auth">Купить</button>
+                            {% endif %}
+                        </form>
                         {% endif %}
                         {% if current_user.is_authenticated %}
                             {% if current_user.access_level > 0 %}
@@ -98,6 +114,7 @@ function toggle_filter(obj){
                         {% endif %}
                     </div>
                 </div>
+                {% endif %}
                 {% endfor %}
             {% else %}
             <h4>Товаров по указанным фильтрам не найдено</h4>

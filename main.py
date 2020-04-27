@@ -5,6 +5,7 @@ from data.__all_models import *
 from data.forms import *
 
 from PIL import Image
+from os import remove
 from pprint import pprint
 
 app = Flask(__name__)
@@ -23,9 +24,13 @@ def change_url_args(url, arg, value, mode='change'):
         return '?' + arg + '=' + value
     elif mode == 'change_list':
         if '?' in url:
-            args = list(filter(lambda x: arg not in x, request.url.split('?')[1].split('&')))
+            args = list(filter(lambda x: arg not in x, url.split('?')[1].split('&')))
             return '?' + '&'.join(sorted(args + [arg + '=' + i for i in value]))
         return '?' + '&'.join(sorted([arg + '=' + i for i in value]))
+
+
+def format_path(url):
+    return ('|' + '|'.join(url.split('/')[3:])).replace('?', ';')
 
 
 @app.after_request
@@ -109,11 +114,15 @@ def shop():
     filter_args = request.args.getlist('tags-filter')
     tags = session.query(Tag).all()
 
+    if request.args.get('availability-filter'):
+        availability_filter = int(request.args.get('availability-filter'))
+    else:
+        availability_filter = 0
+
     if request.args.get('order'):
         order = int(request.args.get('order'))
     else:
         order = 0
-
     if order == 0:
         products_query = session.query(Product).order_by(Product.price).all()
     elif order == 1:
@@ -122,6 +131,7 @@ def shop():
         products_query = session.query(Product).order_by(Product.name).all()
     else:
         products_query = session.query(Product).order_by(Product.name).all()
+
     if filter_args:
         products = []
         for product in products_query:
@@ -132,10 +142,31 @@ def shop():
 
     if request.method == 'POST':
         tag_filter = request.form.getlist('tags-filter')
-        return redirect(change_url_args(request.url, 'tags-filter', tag_filter, mode='change_list'))
+        availability_filter = request.form.get('availability-filter')
+        if availability_filter:
+            url = request.base_url + change_url_args(request.url, 'availability-filter', availability_filter)
+        else:
+            url = request.base_url + change_url_args(request.url, 'availability-filter', '0')
+        return redirect(change_url_args(url, 'tags-filter', tag_filter, mode='change_list'))
 
-    return render_template('shop.html', title='BNS | Магазин', products=products, order=order,
-                           change_url_args=change_url_args, tags=tags, filter=filter_args, str=str)
+    return render_template('shop.html', title='BNS | Магазин', products=products, order=order, format_path=format_path,
+                           change_url_args=change_url_args, tags=tags, availability_filter=availability_filter,
+                           filter=filter_args, str=str)
+
+
+@app.route('/shop/add-to-cart/<int:id>/<string:prev_adr>', methods=['GET', 'POST'])
+def add_to_cart(id, prev_adr='/shop'):
+    if not current_user.is_authenticated:
+        return redirect('/login')
+
+    session = db_session.create_session()
+    user = session.query(User).filter(User.id == current_user.id).first()
+    if str(id) + ', ' in user.cart:
+        user.cart = user.cart.replace(str(id) + ', ', '')
+    else:
+        user.cart += str(id) + ', '
+    session.commit()
+    return redirect(prev_adr.replace(';', '?').replace('|', '/'))
 
 
 @app.route('/shop/add_product', methods=['GET', 'POST'])
@@ -252,6 +283,7 @@ def product_delete(id):
         session.commit()
     else:
         abort(404)
+    remove('static/images/' + str(id) + '.png')
     return redirect('/shop')
 
 
@@ -269,8 +301,12 @@ def configurations():
 
 @app.route('/cart')
 def cart():
+    if not current_user.is_authenticated:
+        return redirect('/login')
+
     session = db_session.create_session()
-    return render_template('base.html', title='BNS | Корзина')
+    cart_list = session.query(User).filter(User.id == current_user.id).first().cart
+    return render_template('cart.html', title='BNS | Корзина', cart=cart_list)
 
 
 def main():

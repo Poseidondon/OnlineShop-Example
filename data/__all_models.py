@@ -15,7 +15,8 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     address = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     email = sqlalchemy.Column(sqlalchemy.String, unique=True)
     hashed_password = sqlalchemy.Column(sqlalchemy.String)
-    purchase_history = sqlalchemy.Column(sqlalchemy.PickleType, default=[])
+    purchase_history = sqlalchemy.Column(sqlalchemy.String, default='')
+    cart = sqlalchemy.Column(sqlalchemy.String, default='')
     balance = sqlalchemy.Column(sqlalchemy.Integer, default=0)
     # access_level: 0 - user, 1 - admin, 2 - owner
     access_level = sqlalchemy.Column(sqlalchemy.Integer, default=0)
@@ -27,7 +28,7 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
         return check_password_hash(self.hashed_password, password)
 
 
-class Product(SqlAlchemyBase, UserMixin, SerializerMixin):
+class Product(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'products'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
@@ -42,7 +43,7 @@ class Product(SqlAlchemyBase, UserMixin, SerializerMixin):
                         backref="products")
 
 
-class Tag(SqlAlchemyBase, UserMixin, SerializerMixin):
+class Tag(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'tags'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)

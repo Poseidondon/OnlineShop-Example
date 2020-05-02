@@ -96,17 +96,17 @@ function toggle_filter(obj){
                             <a style="position: absolute; top: 0; right: 30px;" href="/shop/delete_product/{{product.id}}" class="btn-sm btn-outline-danger">×</a>
                             {% endif %}
                         {% endif %}
+
                         {% if product.amount <= 0 %}
                         <button style="width: 90%;" class="btn btn-outline-danger disabled">Купить</button>
                         {% else %}
-                        <form action="/shop/add-to-cart/{{product.id}}/{{format_path(request.url)}}" method="post">
                             {% if str(product.id) + ', ' in current_user.cart %}
-                            <button type="submit" style="width: 90%;" class="btn btn-outline-light btn-auth">В корзине</button>
+                            <a href="/shop/add-to-cart/{{product.id}}/{{format_path(request.url)}}" style="width: 90%;" class="btn btn-outline-light btn-auth">В корзине</a>
                             {% else %}
-                            <button type="submit" style="width: 90%;" class="btn btn-outline-light btn-auth">Купить</button>
+                            <a href="/shop/add-to-cart/{{product.id}}/{{format_path(request.url)}}" style="width: 90%;" class="btn btn-outline-light btn-auth">Купить</a>
                             {% endif %}
-                        </form>
                         {% endif %}
+
                         {% if current_user.is_authenticated %}
                             {% if current_user.access_level > 0 %}
                             <a style="margin-top: 10px; width: 90%;" href="/shop/product/{{product.id}}" class="btn btn-outline-light btn-auth">Изменить</a>

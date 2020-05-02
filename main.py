@@ -305,8 +305,26 @@ def cart():
         return redirect('/login')
 
     session = db_session.create_session()
-    cart_list = session.query(User).filter(User.id == current_user.id).first().cart
-    return render_template('cart.html', title='BNS | Корзина', cart=cart_list)
+    cart_list = session.query(User).filter(User.id == current_user.id).first().cart.split(', ')[:-1]
+    products_ids = list(set([int(i) for i in cart_list]))
+    products = [session.query(Product).filter(Product.id == i).first() for i in products_ids]
+    return render_template('cart.html', title='BNS | Корзина', products=products, str=str, format_path=format_path,
+                           get_ids=lambda x: [i.id for i in x])
+
+
+@app.route('/order/<order_data_unformed>', methods=['GET', 'POST'])
+def order(order_data_unformed):
+    if not current_user.is_authenticated:
+        return redirect('/login')
+
+    order_data = {int(i[0]): int(i[1]) for i in [j.split('-') for j in order_data_unformed.split(';')]}
+    session = db_session.create_session()
+    for el in order_data:
+        product = session.query(Product).filter(Product.id == el).first()
+        product.amount -= order_data[el]
+    session.query(User).filter(User.id == current_user.id).first().cart = ''
+    session.commit()
+    return redirect('/shop')
 
 
 def main():

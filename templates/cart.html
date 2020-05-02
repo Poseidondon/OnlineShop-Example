@@ -1,5 +1,81 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>{{cart}}</h1>
+<script>
+function recount_total(input){
+    if (input !== undefined) {
+        if (parseInt(input.value) < parseInt(input.min) || parseInt(input.value) > parseInt(input.max))
+            input.value = input.min;
+    } else { return undefined; }
+
+    var total = 0;
+    var prices = document.getElementsByClassName("price");
+    var amounts = document.getElementsByClassName("amount");
+    for (let i = 0; i < prices.length; i++){
+        total += parseInt(prices[i].innerHTML) * parseInt(amounts[i].value);
+    }
+    document.getElementById("total").innerHTML = total;
+    document.getElementById("order_btn").href = '/order/' + amount()
+}
+
+function amount(){
+    var ids = {{get_ids(products)}};
+    var amount = Array.from(document.getElementsByClassName('amount')).map(el => el.value);
+    var amount_data = [];
+    ids.forEach(function (value, i) {
+        amount_data.push(value + '-' + amount[i])
+    });
+    return amount_data.join(';')
+}
+</script>
+
+<div style="max-width: 80%; margin: 0 auto;">
+    <div class="row" style="border-bottom: 3px solid #555; color: #555;">
+        <h1>Корзина товаров</h1>
+    </div>
+    <div class="row">
+        <div style="border-right: 1px solid #555; color: #555;" class="col-3">
+            <h3 style="margin-top: 5px;">Итого: <span id="total">0</span> ₽</h3>
+            <a id="order_btn" href="/shop" style="margin-top: 5px;" class="btn btn-outline-light btn-auth">Оформить заказ</a>
+        </div>
+        <div style="border-left: 1px solid #555;" class="col">
+            {% if products %}
+                {% for product in products %}
+                <div style="margin-top: 15px;" class="row">
+                    <div style="max-width: 170px;" class="col">
+                    <img width="150" height="150" src={{request.url_root + 'static/images/' + str(product.id) + '.png'}}>
+                    </div>
+
+                    <div class="col">
+                        <div style="min-height: 30%;" class="row">
+                            <h4>{{product.name}}</h4>
+                        </div>
+                        <div style="min-height: 70%;" class="row">
+                            <div class="col">
+                                {% if product.description %}
+                                <p>{{product.description}}</p>
+                                {% else %}
+                                <p>Подробное описание пока что не создано :(</p>
+                                {% endif %}
+                                <p>Кол-во на складе: {{product.amount}}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="max-width: 20%;" class="col">
+                        <h4><span class="price">{{product.price}}</span> ₽</h4>
+                        <a href="/shop/add-to-cart/{{product.id}}/{{format_path(request.url)}}" style="position: absolute; top: 0; right: 30px;" class="btn-sm btn-outline-danger">×</a>
+                        <label style="margin-right: 10px;" for="amount_{{product.id}}">Кол-во:</label>
+                        <input onchange="recount_total(this);" style="text-align: center;" type="number" id="amount_{{product.id}}" class="amount" value="1" min="1" max="{{product.amount}}">
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <h4>Корзина пустая</h4>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>recount_total()</script>
 {% endblock %}

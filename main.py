@@ -7,6 +7,7 @@ from data.forms import *
 from PIL import Image
 from os import remove
 from pprint import pprint
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -95,17 +96,47 @@ def register():
             address=form.address.data
         )
         user.set_password(form.password.data)
+        if len(session.query(User).all()) == 0:
+            user.access_level = 2
         session.add(user)
         session.commit()
         return redirect('/login')
     return render_template('register.html', title='BNS | Регистрация', form=form)
 
 
-@app.route('/profile')
+@app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
     session = db_session.create_session()
-    return render_template('base.html', title='BNS | Личный кабинет')
+
+    if current_user.purchase_history:
+        history = eval(current_user.purchase_history)
+    else:
+        history = ''
+    users = session.query(User).all()
+    user_params = (current_user.surname, current_user.name, current_user.address)
+
+    if request.method == 'POST':
+        for user in users:
+            user.access_level = int(request.form.get('select_' + str(user.id)))
+        session.commit()
+        return redirect('/profile')
+
+    return render_template('profile.html', title='BNS | Личный кабинет', users=users, history=history, user_params=user_params)
+
+
+@app.route('/profile/change_params', methods=['GET', 'POST'])
+@login_required
+def change_params():
+    session = db_session.create_session()
+    if request.method == 'POST':
+        user = session.query(User).filter(User.id == current_user.id).first()
+        user.surname = request.form['surname']
+        user.name = request.form['name']
+        user.address = request.form['address']
+        session.commit()
+
+    return redirect('/profile')
 
 
 @app.route('/shop', methods=['GET', 'POST'])
@@ -312,17 +343,33 @@ def cart():
                            get_ids=lambda x: [i.id for i in x])
 
 
-@app.route('/order/<order_data_unformed>', methods=['GET', 'POST'])
-def order(order_data_unformed):
+@app.route('/order/<order_data_unformed>/<total>', methods=['GET', 'POST'])
+def order(order_data_unformed, total):
     if not current_user.is_authenticated:
         return redirect('/login')
 
     order_data = {int(i[0]): int(i[1]) for i in [j.split('-') for j in order_data_unformed.split(';')]}
     session = db_session.create_session()
+
+    order_str = []
     for el in order_data:
         product = session.query(Product).filter(Product.id == el).first()
         product.amount -= order_data[el]
-    session.query(User).filter(User.id == current_user.id).first().cart = ''
+        order_str.append(f'{product.name} {order_data[el]} шт.')
+
+    if current_user.purchase_history:
+        history = eval(current_user.purchase_history)
+    else:
+        history = {}
+    date = datetime.now().strftime('%H:%M - %d.%m.%Y')
+    if date in history:
+        history[date].append((', '.join(order_str), total))
+    else:
+        history[date] = [(', '.join(order_str), total)]
+
+    user = session.query(User).filter(User.id == current_user.id).first()
+    user.purchase_history = str(history)
+    user.cart = ''
     session.commit()
     return redirect('/shop')
 

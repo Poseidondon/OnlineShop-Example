@@ -6,7 +6,7 @@ function recount_total(input){
     if (input !== undefined) {
         if (parseInt(input.value) < parseInt(input.min) || parseInt(input.value) > parseInt(input.max))
             input.value = input.min;
-    } else { return undefined; }
+    }
 
     var total = 0;
     var prices = document.getElementsByClassName("price");
@@ -15,7 +15,7 @@ function recount_total(input){
         total += parseInt(prices[i].innerHTML) * parseInt(amounts[i].value);
     }
     document.getElementById("total").innerHTML = total;
-    document.getElementById("order_btn").href = '/order/' + amount()
+    document.getElementById("order_btn").href = '/order/' + amount() + '/' + total;
 }
 
 function amount(){

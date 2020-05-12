@@ -9,7 +9,7 @@ function addTag(){
     for (let i of document.getElementsByName("tags")){
         prev_names += i.value.toLowerCase();;
     }
-    if ((3 <= tag_name.length && tag_name.length <= 12) && !(prev_names.includes(tag_name))) {
+    if ((3 <= tag_name.length && tag_name.length <= 18) && !(prev_names.includes(tag_name))) {
         var upper_case = tag_name.charAt(0).toUpperCase() + tag_name.slice(1);
         if (prev_names == "") {
             document.getElementById('tags-menu').insertAdjacentHTML('afterbegin', "<label class='dropdown-item tags' id='last_tag'><input checked type='checkbox' name='tags' value='" + tag_name + "'> " + upper_case + "</label>");

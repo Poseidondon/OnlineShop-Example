@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="authorization" align="center">
+    <h2 align="left" style="margin-left: 20px;">Изменение баланса</h2>
+    <hr style="margin: 10px">
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <table width="94%" cellpadding="6">
+        <tr>
+            <td width="30%">{{ form.amount.label }}</td>
+            <td>{{ form.amount(class="form-control", value="0") }}</td>
+            {% for error in form.amount.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </tr>
+        </table>
+        <div style="margin: 10px 0;">{{ form.submit(type="submit", class="btn btn-outline-light btn-auth", style="width: 300px;") }}</div>
+        <div style="margin: 10px 0;">{{ message }}</div>
+    </form>
+</div>
+{% endblock %}

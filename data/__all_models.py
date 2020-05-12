@@ -36,7 +36,6 @@ class Product(SqlAlchemyBase, SerializerMixin):
     description = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     price = sqlalchemy.Column(sqlalchemy.Integer)
     amount = sqlalchemy.Column(sqlalchemy.Integer, default=0)
-    purchase_amount = sqlalchemy.Column(sqlalchemy.PickleType, default=0)
 
     tags = orm.relation("Tag",
                         secondary="products_to_tags",

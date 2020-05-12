@@ -32,3 +32,8 @@ class AddProductForm(FlaskForm):
     price = IntegerField('Цена (₽)', validators=[DataRequired()])
     amount = IntegerField('*Кол-во на складе', default=0)
     submit = SubmitField('Сохранить')
+
+
+class ChangeBalance(FlaskForm):
+    amount = IntegerField('Количество (₽)', validators=[DataRequired()])
+    submit = SubmitField('Добавить')

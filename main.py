@@ -6,7 +6,6 @@ from data.forms import *
 
 from PIL import Image
 from os import remove
-from pprint import pprint
 from datetime import datetime
 
 app = Flask(__name__)
@@ -122,7 +121,23 @@ def profile():
         session.commit()
         return redirect('/profile')
 
-    return render_template('profile.html', title='BNS | Личный кабинет', users=users, history=history, user_params=user_params)
+    return render_template('profile.html', title='BNS | Личный кабинет', users=users, history=history,
+                           user_params=user_params)
+
+
+@app.route('/profile/balance', methods=['GET', 'POST'])
+@login_required
+def balance():
+    session = db_session.create_session()
+    form = ChangeBalance()
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            user = session.query(User).filter(User.id == current_user.id).first()
+            user.balance += int(request.form['amount'])
+            session.commit()
+            return redirect('/shop')
+
+    return render_template('balance.html', title='BNS | Баланс', form=form)
 
 
 @app.route('/profile/change_params', methods=['GET', 'POST'])
@@ -282,6 +297,16 @@ def edit_product(id):
             product.price = form.price.data
             product.amount = form.amount.data
 
+            product.tags.clear()
+            for tag in chosen_tags:
+                if session.query(Tag).filter(Tag.name == tag).first():
+                    new_tag = session.query(Tag).filter(Tag.name == tag).first()
+                else:
+                    new_tag = Tag(name=tag)
+                    session.add(new_tag)
+                if new_tag not in product.tags:
+                    product.tags.append(new_tag)
+
             if form.image.data:
                 f_name = 'static/images/' + str(product.id) + '.png'
                 f = open(f_name, 'wb')
@@ -316,18 +341,6 @@ def product_delete(id):
         abort(404)
     remove('static/images/' + str(id) + '.png')
     return redirect('/shop')
-
-
-@app.route('/configurator')
-def configurator():
-    session = db_session.create_session()
-    return render_template('base.html', title='BNS | Конфигуратор')
-
-
-@app.route('/configurations')
-def configurations():
-    session = db_session.create_session()
-    return render_template('base.html', title='BNS | Сборки')
 
 
 @app.route('/cart')
@@ -368,6 +381,11 @@ def order(order_data_unformed, total):
         history[date] = [(', '.join(order_str), total)]
 
     user = session.query(User).filter(User.id == current_user.id).first()
+    if user.balance < int(total):
+        return redirect('/profile/balance')
+    else:
+        user.balance -= int(total)
+
     user.purchase_history = str(history)
     user.cart = ''
     session.commit()
@@ -378,6 +396,7 @@ def main():
     db_session.global_init("db/shop.sqlite")
 
     session = db_session.create_session()
+    print('Аккаунт владельца:\nEmail: mail@mail.ru\nПароль: 321')
 
     app.run()
 
